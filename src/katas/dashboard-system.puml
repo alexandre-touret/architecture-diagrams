@@ -1,0 +1,22 @@
+@startuml batch_evenement
+!include ../../include/C4_Container.puml
+!include ../../include/C4_Context.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title Road analyzer system diagram
+Person(user, "User")
+System_Ext(car,"Car")
+
+System_Boundary(dc1, "System") {
+    System(analyzer,"Road analyzer","Accepts files from trusted customers")
+}
+
+SystemDb_Ext(opendata,"Roads repository")
+
+Rel(user,analyzer,"browse","HTTPS")
+Rel(car,analyzer,"push data","MQTT")
+Rel(analyzer,opendata,"fetch road repository on a regular basis","HTTPS")
+
+@enduml

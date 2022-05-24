@@ -1,0 +1,39 @@
+@startuml batch_evenement
+!include ../../include/C4_Container.puml
+!include ../../include/C4_Context.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title Road analyzer container diagram
+Person(user, "User")
+System_Ext(car,"Car(s)")
+
+System_Boundary(dc1, "Road analyzer system") {
+    ContainerQueue(queue,"Messaging provider (HA)","MQTT, ActiveMQ")
+    Container(analyzerGUI,"Road Analyzer Web Application (GUI/API)","Exposes data", "Angular, Java, SpringBoot")
+    Container(digester,"Fetch data from cars and store them as is in thd Db","Java,QuarkusIO, Kubernetes")
+    Container(datamart,"Formatted Data creator","Scala, Spark, Kubernetes")
+    ContainerQueue(kafka,"Car's data",Kafka)
+    ContainerDb(db2,"Road Repository",PostgreSQL)
+    ContainerDb(db3,"Dashboard formatted data",PostgreSQL)
+    Container(batch,"Get Road repository data","Java,QuarkusIO")
+
+}
+
+SystemDb_Ext(opendata,"Roads Repository")
+
+Rel_D(user,analyzerGUI,"browse","MQTT")
+Rel_D(car,queue,"Push data asynchronously","HTTPS")
+Rel_U(digester,queue,"Fetch Data","MQTT")
+Rel(digester,kafka,"Stores raw data","Kafka")
+Rel_U(batch,opendata,"fetch data on a regular basis (e.g. monthly)","HTTPS")
+Rel(batch,db2,"push open data in a local repository","HTTPS")
+Rel(analyzerGUI,db2,"Queries the local repository","JDBC")
+Rel(analyzerGUI,db3,"Get formatted data to present them in a dashboard","JDBC")
+Rel_U(datamart,kafka,Kafka)
+Rel_U(datamart,db2,"JDBC")
+Rel_U(datamart,db3,"JDBC")
+
+Lay_D(user,dc1)
+@enduml
